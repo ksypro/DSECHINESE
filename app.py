@@ -1,196 +1,177 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# 設定頁面資訊
-st.set_page_config(
-    page_title="DSE 中國歷史成績模擬器",
-    page_icon="📚",
-    layout="wide"
-)
+st.set_page_config(page_title="DSE 中史模擬器", layout="wide")
 
-# 讀取或直接嵌入 HTML 內容
+# 這裡封裝了你原本所有的計算邏輯與文字
 html_code = """
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>DSE 中國歷史 · 成績模擬與溫習規劃</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     * { box-sizing: border-box; }
-    :root { color-scheme: light; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top, #eef2ff 0, #f5f5f7 40%, #f9fafb 100%);
-      color: #111827;
-      overflow-x: hidden;
-    }
-    .container {
-      max-width: 980px;
-      margin: 10px auto;
-      padding: 0 16px;
-    }
-    /* 以下省略部分重複的 CSS 以節省空間，請確保使用你提供的完整 CSS */
-    .page-header { margin-bottom: 18px; }
-    .title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-    .chip { padding: 4px 10px; border-radius: 999px; font-size: 12px; background: rgba(37,99,235,0.08); color: #1d4ed8; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-    .chip-dot { width: 7px; height: 7px; border-radius: 999px; background: #22c55e; }
-    .subtitle { margin-top: 6px; color: #4b5563; font-size: 13px; line-height: 1.6; }
-    .card { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 22px; padding: 20px 18px; box-shadow: 0 24px 60px rgba(0,0,0,0.04), 0 0 0 1px rgba(148,163,184,0.18); margin-bottom: 18px; }
-    .card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 8px; }
-    h2 { font-size: 18px; margin: 0; }
-    .card-caption { font-size: 12px; color: #6b7280; }
-    .section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 8px; }
-    .inputs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .input-group { background: #f9fafb; border-radius: 16px; padding: 10px 12px 12px; border: 1px solid #e5e7eb; }
-    .input-label-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
-    label { font-weight: 600; font-size: 13px; color: #111827; }
-    .badge { padding: 3px 8px; border-radius: 999px; font-size: 11px; background: #eff6ff; color: #1d4ed8; white-space: nowrap; }
-    .hint { font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
-    input[type="number"] { width: 100%; margin-top: 4px; padding: 10px 11px; font-size: 16px; border-radius: 12px; border: 1px solid #e5e7eb; outline: none; background: #ffffff; text-align: right; }
-    .paper-tag { display: inline-flex; gap: 6px; align-items: center; font-size: 11px; color: #4b5563; }
-    .pill { padding: 2px 8px; border-radius: 999px; background: #e5e7eb; font-size: 11px; }
-    button { width: 100%; padding: 13px; font-size: 16px; font-weight: 700; border: none; border-radius: 999px; background: linear-gradient(135deg, #2563eb, #4f46e5); color: #fff; cursor: pointer; margin-top: 6px; box-shadow: 0 14px 28px rgba(37,99,235,0.35); transition: all 0.12s; }
-    button:hover { transform: translateY(-1px); box-shadow: 0 18px 32px rgba(37,99,235,0.4); }
-    .error { color: #b91c1c; font-size: 12px; margin-top: 6px; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f7; padding: 15px; color: #1d1d1f; }
+    .container { max-width: 900px; margin: auto; }
+    .card { background: white; border-radius: 18px; padding: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    h1 { font-size: 26px; font-weight: 800; }
+    .subtitle { font-size: 14px; color: #6e6e73; margin-bottom: 20px; }
+    .inputs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .input-group { background: #fbfbfd; border-radius: 12px; padding: 12px; border: 1px solid #d2d2d7; }
+    label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 5px; }
+    input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d2d2d7; font-size: 16px; }
+    button { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
     .result-section { display: none; }
-    .result-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 4px; }
-    .level { font-size: 30px; font-weight: 800; letter-spacing: -0.04em; color: #111827; }
-    .percent { font-size: 18px; color: #4b5563; }
-    .tagline { font-size: 13px; color: #6b7280; margin-top: 4px; }
-    .warning { margin-top: 6px; font-size: 13px; color: #b91c1c; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
-    th, td { border: 1px solid #e5e7eb; padding: 5px 6px; text-align: center; }
-    th { background: #f3f4f6; font-weight: 600; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
-    .small-card { border-radius: 16px; border: 1px solid #e5e7eb; padding: 10px 12px; background: #f9fafb; font-size: 12px; line-height: 1.5; }
-    .small-card h3 { font-size: 13px; margin: 0 0 4px; }
-    ul { padding-left: 18px; margin: 4px 0; }
-    li { margin-bottom: 4px; }
-    .subtle { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-    .chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; font-size: 11px; }
-    .mini-chip { padding: 3px 8px; border-radius: 999px; background: #e5e7eb; color: #4b5563; }
-    @media (max-width: 640px) { h1 { font-size: 22px; } }
+    .level-display { display: flex; align-items: baseline; gap: 10px; }
+    .level { font-size: 48px; font-weight: 800; color: #0071e3; }
+    .percent { font-size: 24px; color: #1d1d1f; }
+    .warning { color: #d70015; font-weight: 700; margin: 15px 0; padding: 10px; border-left: 4px solid #d70015; background: #fff2f2; }
+    .small-card { background: #fbfbfd; border-radius: 12px; padding: 15px; border: 1px solid #d2d2d7; margin-top: 15px; }
+    h3 { font-size: 15px; margin-top: 0; }
+    ul { padding-left: 20px; font-size: 13px; line-height: 1.7; }
+    .subtle { font-size: 11px; color: #86868b; margin-top: 5px; }
+    hr { border: 0; border-top: 1px solid #d2d2d7; margin: 15px 0; }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="page-header">
-    <div class="title-row">
-      <h1>DSE 中國歷史 · 成績模擬與溫習規劃</h1>
-      <div class="chip"><span class="chip-dot"></span> For S6 Students</div>
-    </div>
-    <p class="subtitle">輸入你在各部分的預計分數（模擬卷、校內試或自我估算）。系統會自動計算等級並提供溫習建議。</p>
-  </div>
-
   <div class="card">
-    <div class="card-header">
-      <h2>分數輸入</h2>
-      <div class="paper-tag"><span class="pill">Paper 1</span><span class="pill">Paper 2</span></div>
-    </div>
-    <div class="section-label">Paper 1 · 必答題 (31%)</div>
+    <h1>DSE 中國歷史 · 成績模擬與溫習規劃</h1>
+    <p class="subtitle">輸入預算分數，獲取 郭Sir 專屬分析與 Tagline 評語。</p>
+    
     <div class="inputs-grid">
-      <div class="input-group">
-        <div class="input-label-row"><label for="p1AComp">甲部 必答題</label><span class="badge">20 分</span></div>
-        <input id="p1AComp" type="number" min="0" max="20" placeholder="0 - 20">
-      </div>
-      <div class="input-group">
-        <div class="input-label-row"><label for="p1BComp">乙部 必答題</label><span class="badge">20 分</span></div>
-        <input id="p1BComp" type="number" min="0" max="20" placeholder="0 - 20">
-      </div>
+      <div class="input-group"><label>卷一：甲必答 (20)</label><input id="p1AComp" type="number" max="20" value="0"></div>
+      <div class="input-group"><label>卷一：乙必答 (20)</label><input id="p1BComp" type="number" max="20" value="0"></div>
+      <div class="input-group"><label>卷一：甲選答 (25)</label><input id="p1AElect" type="number" max="25" value="0"></div>
+      <div class="input-group"><label>卷一：乙選答 (25)</label><input id="p1BElect" type="number" max="25" value="0"></div>
+      <div class="input-group"><label>卷二：黃河 (25)</label><input id="p2Y" type="number" max="25" value="0"></div>
+      <div class="input-group"><label>卷二：長江 (25)</label><input id="p2Z" type="number" max="25" value="0"></div>
+      <div class="input-group"><label>卷二：珠江 (25)</label><input id="p2P" type="number" max="25" value="0"></div>
     </div>
-
-    <div class="section-label" style="margin-top: 14px;">Paper 1 · 選答題 (39%)</div>
-    <div class="inputs-grid">
-      <div class="input-group">
-        <div class="input-label-row"><label for="p1AElect">甲部 選答題</label><span class="badge">25 分</span></div>
-        <input id="p1AElect" type="number" min="0" max="25" placeholder="0 - 25">
-      </div>
-      <div class="input-group">
-        <div class="input-label-row"><label for="p1BElect">乙部 選答題</label><span class="badge">25 分</span></div>
-        <input id="p1BElect" type="number" min="0" max="25" placeholder="0 - 25">
-      </div>
-    </div>
-
-    <div class="section-label" style="margin-top: 14px;">Paper 2 · 歷史專題 (30%)</div>
-    <div class="inputs-grid">
-      <div class="input-group"><label>黃河流域</label><input id="p2Yellow" type="number" min="0" max="25" placeholder="0-25"></div>
-      <div class="input-group"><label>長江流域</label><input id="p2Yangtze" type="number" min="0" max="25" placeholder="0-25"></div>
-      <div class="input-group"><label>珠江流域</label><input id="p2Pearl" type="number" min="0" max="25" placeholder="0-25"></div>
-    </div>
-    <div id="error" class="error"></div>
-    <button id="calcBtn">計算成績與溫習建議</button>
+    <button id="calcBtn">計算模擬結果</button>
   </div>
 
   <div id="result" class="card result-section">
-    <div class="result-main">
-      <div class="level" id="levelText">–</div>
-      <div class="percent" id="percentText"></div>
+    <div class="level-display">
+      <div id="levelText" class="level"></div>
+      <div id="percentText" class="percent"></div>
     </div>
-    <div class="tagline" id="taglineText"></div>
-    <div class="warning" id="warningText"></div>
-    <div class="grid">
-      <div class="small-card"><h3>得分佔比</h3><table><thead><tr><th>部分</th><th>折算%</th></tr></thead><tbody id="partTableBody"></tbody></table></div>
-      <div class="small-card"><h3>升級目標</h3><div id="nextLevelBlock"></div></div>
+    <p id="taglineText" style="font-weight: 500; color: #3a3a3c; margin: 10px 0;"></p>
+    <div id="warningText"></div>
+
+    <div class="small-card">
+      <h3>重點推分策略</h3>
+      <div id="valueAdvice"></div>
     </div>
-    <div class="small-card" style="margin-top:10px;"><h3>溫習建議</h3><ul id="studyTips"></ul></div>
+
+    <div class="small-card">
+      <h3>具體溫習建議</h3>
+      <ul id="studyTips"></ul>
+    </div>
   </div>
 </div>
 
 <script>
-  // 這裡放入你原本 HTML 中的完整 JavaScript 邏輯
-  const cutoffs = [
-    { level: "5**", score: 82 }, { level: "5*", score: 74 }, { level: "5", score: 70 },
-    { level: "4", score: 60 }, { level: "3", score: 50 }, { level: "2", score: 30 }, { level: "1", score: 1 }
-  ];
-  function getLevel(p) { for (const c of cutoffs) { if (p >= c.score) return c.level; } return "U"; }
-  function getNextLevelInfo(p) { 
-    const sorted = [...cutoffs].sort((a, b) => a.score - b.score);
-    for (const c of sorted) { if (p < c.score) return { targetLevel: c.level, targetScore: c.score, diff: c.score - p }; }
-    return null;
-  }
-
   document.getElementById("calcBtn").addEventListener("click", function() {
-    const p1A = parseFloat(document.getElementById("p1AComp").value) || 0;
-    const p1B = parseFloat(document.getElementById("p1BComp").value) || 0;
-    const p1AE = parseFloat(document.getElementById("p1AElect").value) || 0;
-    const p1BE = parseFloat(document.getElementById("p1BElect").value) || 0;
-    const p2Y = parseFloat(document.getElementById("p2Yellow").value) || 0;
-    const p2Z = parseFloat(document.getElementById("p2Yangtze").value) || 0;
-    const p2P = parseFloat(document.getElementById("p2Pearl").value) || 0;
+    const v = (id) => parseFloat(document.getElementById(id).value) || 0;
+    
+    // 獲取分數
+    const p1A = v("p1AComp"), p1B = v("p1BComp"), p1AE = v("p1AElect"), p1BE = v("p1BElect");
+    const p2Raw = [v("p2Y"), v("p2Z"), v("p2P")].sort((a,b)=>b-a);
+    const p2Best = p2Raw[0] + p2Raw[1];
 
-    const p1Percent = (p1A/20*15.5) + (p1B/20*15.5) + (p1AE/25*19.5) + (p1BE/25*19.5);
-    const p2BestTwo = [p2Y, p2Z, p2P].sort((a,b)=>b-a).slice(0,2).reduce((a,b)=>a+b, 0);
-    const p2Percent = (p2BestTwo/50*30);
-    const total = Math.round((p1Percent + p2Percent) * 10) / 10;
-    
-    document.getElementById("levelText").textContent = "等級：" + getLevel(total);
-    document.getElementById("percentText").textContent = total + " %";
+    // 計算加權
+    const p1AP = (p1A/20)*15.5, p1BP = (p1B/20)*15.5;
+    const p1AEP = (p1AE/25)*19.5, p1BEP = (p1BE/25)*19.5;
+    const p2P = (p2Best/50)*30;
+    const total = Math.round((p1AP + p1BP + p1AEP + p1BEP + p2P) * 10) / 10;
+
+    // 1. 等級評語 (Tagline)
+    let level = "U", tagline = "";
+    if (total >= 82) { level = "5**"; tagline = "整體表現已屬頂尖，卷一盡量維持高命中率，卷二則可在觀點深度及史學視角再作提升。"; }
+    else if (total >= 74) { level = "5*"; tagline = "屬高分段，如能進一步收窄粗心失分，並加強卷二論述的層次感，有機會推上 5**。"; }
+    else if (total >= 70) { level = "5"; tagline = "中上水平，建議把卷一當成必須穩守的基礎分，再用卷二拉開與其他考生的差距。"; }
+    else if (total >= 60) { level = "4"; tagline = "已穩定合格，可先確保卷一必答與較熟單元的選答不白白失分，再逐步挑戰卷二較深的題型。"; }
+    else if (total >= 50) { level = "3"; tagline = "已有一定根基，如能再鞏固史實與常見題型，並整理好答題結構，成績有望再上一級。"; }
+    else if (total >= 30) { level = "2"; tagline = "目前需要打好基本盤，重建各時期大事及因果關係，再配合簡單資料題技巧，慢慢累積分數。"; }
+    else if (total >= 1) { level = "1"; tagline = "關鍵是建立整體歷史故事線：先搞清每一階段發生什麼事與大概次序，再循序漸進學習如何用資料與史實回應題目。"; }
+    else { level = "U"; tagline = "暫時未達第 1 級，建議由最基本的時間線與大事開始重整，再逐步接觸資料題與簡單論述題。"; }
+
+    document.getElementById("levelText").innerText = "等級：" + level;
+    document.getElementById("percentText").innerText = total + "%";
+    document.getElementById("taglineText").innerText = tagline;
     document.getElementById("result").style.display = "block";
+
+    // 2. 郭Sir 聯絡提醒
+    const warn = document.getElementById("warningText");
+    if (["3","2","1","U"].includes(level)) {
+      warn.className = "warning";
+      warn.innerText = "⚠️ 模擬結果顯示你目前大約在「第 " + level + " 級」水平。請立即聯絡郭Sir（97701850），改變始於今日。";
+    } else { warn.className = ""; warn.innerText = ""; }
+
+    // 3. 提升空間分析 (BetterAB & ValueAdvice)
+    const parts = [
+      { name: "卷一甲必答", raw: p1A, max: 20, weight: 15.5 },
+      { name: "卷一乙必答", raw: p1B, max: 20, weight: 15.5 },
+      { name: "卷一甲選答", raw: p1AE, max: 25, weight: 19.5 },
+      { name: "卷一乙選答", raw: p1BE, max: 25, weight: 19.5 }
+    ];
     
-    const next = getNextLevelInfo(total);
-    document.getElementById("nextLevelBlock").innerHTML = next ? `距離 ${next.targetLevel} 還差 ${Math.round(next.diff*10)/10}%` : "已達最高等級";
-    
+    const partsWithValue = parts.map(p => ({
+      name: p.name,
+      percentPerMark: p.weight / p.max,
+      remainingMarks: p.max - p.raw,
+      potentialGain: (p.max - p.raw) * (p.weight / p.max)
+    })).sort((a, b) => b.potentialGain - a.potentialGain);
+
+    const bestPart = partsWithValue[0];
+    const secondBestPart = partsWithValue[1];
+
+    // 甲 vs 乙 整體比較
+    const A_gain = ( (20-p1A)*(15.5/20) ) + ( (25-p1AE)*(19.5/25) );
+    const B_gain = ( (20-p1B)*(15.5/20) ) + ( (25-p1BE)*(19.5/25) );
+    let betterAB = "";
+    if (A_gain > B_gain) betterAB = "從歷代發展整體來看，「甲部」（夏商周至鴉片戰爭前夕）的可提升空間稍大，可以優先整理這部分的線索及重要政策。";
+    else if (B_gain > A_gain) betterAB = "從歷代發展整體來看，「乙部」（鴉片戰爭至二十世紀末）的可提升空間較多，可先鞏固近現代中國史，並配合資料題與論述題練習。";
+    else betterAB = "現階段，歷代發展中的甲部與乙部整體提升空間相若，靈活決定先處理哪一邊。";
+
+    let valHtml = "<p>因為各部分的比重與尚可追回的分數不同，綜合計算後：</p>";
+    valHtml += "<p>短期內較適合作為重點推分的是：<strong>" + bestPart.name + "</strong><br>";
+    valHtml += "· 每增加 1 分，約相當於全科 <strong>" + bestPart.percentPerMark.toFixed(2) + "%</strong><br>";
+    valHtml += "· 理論上尚餘約 <strong>" + bestPart.remainingMarks + " 分</strong> 可爭取</p>";
+    valHtml += "<p>第二重點可考慮：<strong>" + secondBestPart.name + "</strong>。</p>";
+    valHtml += "<hr><p>" + betterAB + "</p>";
+    valHtml += "<p class='subtle'>方向：卷一穩守基礎；卷二則是分辨 5、5*、5** 的關鍵。</p>";
+    document.getElementById("valueAdvice").innerHTML = valHtml;
+
+    // 4. 具體建議 (補全丟失的建議文字)
     const tips = document.getElementById("studyTips");
-    tips.innerHTML = "<li>加強卷一資料扣連技巧</li><li>整理卷二專題論證框架</li>";
+    tips.innerHTML = "";
+    const addTip = (t) => { let li = document.createElement("li"); li.innerText = t; tips.appendChild(li); };
     
-    if (total < 50) {
-        document.getElementById("warningText").textContent = "⚠️ 建議聯絡郭Sir（97701850）獲取專業指導。";
+    addTip("【共通提醒】中史卷考三方面：資料價值與限制、分析比較能力、史實熟悉度。");
+
+    if (total < 30) {
+      addTip("先從「畫大地圖」開始：為甲部和乙部分別整理簡單時間線及關鍵事件。");
+      addTip("卷一資料題練習「先捉重點句，再用自己話解釋」。");
+      addTip("接觸 Past Paper Marking Scheme，用螢光筆標出常見字眼。");
+    } else if (total < 50) {
+      addTip("操卷時用 Marking Scheme 反推溫習方向：點列方式抄下重點句。");
+      addTip("回答資料限制時，從作者、時間、種類三個角度入手。");
+      addTip("卷一答題設計固定結構：論點 -> 引用 -> 解說 -> 小結。");
+    } else if (total < 70) {
+      addTip("訓練限時完成：嘗試在 45 分鐘內寫出結構完整的答案。");
+      addTip("熟習五類常見題型：表態、因果、比較、評論及主因題。");
+      addTip("卷二嘗試在答案中清楚分段，包含立場句、史實及解說。");
     } else {
-        document.getElementById("warningText").textContent = "";
+      addTip("檢視失分題：區分是史實記錯、理解方向有誤還是論證不緊密。");
+      addTip("刻意多練評論題與主因題：比較不同原因的份量。");
+      addTip("替每個專題整理「範文骨架」，有助考試時快速起稿。");
     }
-    
-    const tbody = document.getElementById("partTableBody");
-    tbody.innerHTML = `<tr><td>卷一</td><td>\${p1Percent.toFixed(1)}%</td></tr><tr><td>卷二</td><td>\${p2Percent.toFixed(1)}%</td></tr>`;
   });
 </script>
 </body>
 </html>
 """
 
-# 使用 Streamlit HTML 元件渲染
-# height 可以根據內容長度調整
-components.html(html_code, height=1200, scrolling=True)
+components.html(html_code, height=1300, scrolling=True)
